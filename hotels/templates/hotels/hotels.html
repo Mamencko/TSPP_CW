@@ -1,0 +1,91 @@
+{% extends '../main/base.html' %}
+{% load custom_tags %}
+
+{% block title %}
+    Готелі
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="mb-3">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-row align-items-center mb-2">
+                <div class="col-4">
+                    <input type="text" class="form-control" name="pcity" placeholder="Місце" list="cities" {% if search_param.city %} value="{{ search_param.city }}" {% endif %}>
+                </div>
+                <datalist id="cities">
+                    {% for city in cities %}
+                    <option>{{ city }}</option>
+                    {% endfor %}
+                </datalist>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Знайти</button>
+                </div>
+            </div>
+            <div class="form-group row container">
+                <div class="col-auto">
+                    <div class="font-weight-bold">Зірки:</div>
+                    {% for star in stars %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="{{ star }}" name="stars" value="{{ star }}"  {% if star in search_param.stars %} checked {% endif %}>
+                        <label class="form-check-label" for="{{ star }}">
+                            {% for i in star|times %}<span style="color:orange;">&starf;</span>{% endfor %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-auto">
+                    <div class="font-weight-bold">Тип кімнати:</div>
+                    {% for room in rooms %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="{{ room }}" name="rooms" value="{{ room }}" {% if room in search_param.rooms %} checked {% endif %}>
+                        <label class="form-check-label" for="{{ room }}">{{ room }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-2">
+                    <label class="font-weight-bold" for="min">Ціна:</label>
+                    <input class="form-control mb-2" type="number" min="0" id="min" name="min_price" placeholder="Мінімальна" {% if search_param.min_price %} value="{{ search_param.min_price }}" {% else %} value="0" {% endif %}>
+                    <input class="form-control" type="number" min="0" id="max" name="max_price" placeholder="Максимальна" {% if search_param.max_price %} value="{{ search_param.max_price }}" {% else %} value="999999" {% endif %}>
+                </div>
+                <div class="col-auto">
+                    <label class="font-weight-bold" for="sort">Сортувати за:</label>
+                    <select class="form-control" id="sort" name="sort">
+                        <option value="street" {% if search_param.sort == 'street' %} selected {% endif %}>Місцем</option>
+                        <option value="room__price" {% if search_param.sort == 'room__price' %} selected {% endif %}>Ціною</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% for hotel in hotels %}
+    <div class="card shadow-sm mb-3">
+        <div class="row no-gutters">
+            <div class="col-4">
+                <img src="{{ hotel.hotelimages_set.all.0.image.url }}" class="card-img">
+            </div>
+            <div class="col-8">
+                <div class="card-body">
+                    <h5 class="card-title mb-1">
+                        {{ hotel.name }}
+                        {% for i in hotel.stars|times %}
+                        <span style="color:orange;">&starf;</span>
+                        {% endfor %}
+                    </h5>
+                    <p class="card-subtitle text-muted">
+                        {{ hotel.country }}, {{ hotel.city }}, {{ hotel.street }}
+                    </p>
+                    <p class="card-text mb-0">Рейтинг: {{ hotel.get_rate }}/10 <span class="text-muted">(Відгуків: {{ hotel.hotelreview_set.count }})</span></p>
+                    <p class="card-text">{{ hotel.get_lowest_price_room.type }}</p>
+                    <p class="card-text font-weight-bold">{{ hotel.get_lowest_price_room.price }} грн</p>
+                    <a href="{% url 'hotel_detail' hotel.id %}" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>За вашим запитом нічого не знайдено.</p>
+    {% endfor %}
+</div>
+{% endblock %}

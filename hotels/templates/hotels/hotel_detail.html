@@ -1,0 +1,128 @@
+{% extends '../main/base.html' %}
+{% load custom_tags %}
+
+{% block title %}
+    Готель {{ hotel.name }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row no-gutters">
+        <div id="carousel" class="carousel slide carousel-fade col-6 " data-ride="carousel">
+            <div class="carousel-inner">
+                {% for image in hotel.hotelimages_set.all %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{{ image.image.url }}" class="d-block w-100 rounded-left" alt="...">
+                </div>
+                {% endfor %}
+            </div>
+            <a class="carousel-control-prev" href="#carousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+        <div class="col-6 rounded-right bg-white p-4">
+            <h3 class="mb-0">{{ hotel.name }}</h3>
+            <h1>{% for i in hotel.stars|times %}<span style="color:orange;">&starf;</span>{% endfor %}</h1>
+            <p class="font-weight-bold">{{ hotel.country }}, {{ hotel.city }}, {{ hotel.street }}</p>
+            <p>Рейтинг: {{ hotel.get_rate }}/10</p>
+            <a href="{{ hotel.url }}" class="btn btn-primary">Забронювати</a>
+        </div>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        <h4>Короткий опис готелю</h4>
+        <p>{{ hotel.description|linebreaks }}</p>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        {% regroup hotel.facilities.all|dictsort:'category' by category as facility_categories %}
+        <h5>Зручності</h5>
+        <ul class="list-inlin row">
+            {% for category in facility_categories %}
+            <li class="list-inline-item col-3"><span class="font-weight-bold">{{ category.grouper }}</span>
+                <ul>
+                    {% for facility in category.list %}
+                    <li>{{ facility.name }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        <h5>Місця поруч</h5>
+        <ul class="list-inlin row">
+            {% for place in hotel.placesnearhotel_set.all|dictsort:'distance' %}
+            <li class="list-inline-item col-5 d-flex justify-content-between">
+                <span>{{ place.place }}</span>
+                <span>{{ place.distance }}км</span>
+            </li>
+            <hr>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class=" rounded bg-white mt-4 p-4">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Тип номера</th>
+                    <th scope="col">Місткість</th>
+                    <th scope="col">Опис</th>
+                    <th scope="col">Ціна</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for room in hotel.room_set.all %}
+                <tr>
+                    <td>{{ room.type }}</td>
+                    <td>Людей: {{ room.capacity }}</td>
+                    <td>{{ room.description }}</td>
+                    <td>{{ room.price }} грн</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        <h5 class="d-flex justify-content-between">Відгуки про {{ hotel.name }}</h5>
+        <form action="{% url 'add_hotel_review' hotel.id %}" method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-5">
+                    <label for="name">Ім'я:</label>
+                    <input type="text" class="form-control" id="name" name="author" placeholder="Введіть ім'я">
+                </div>
+                <div class="form-group col-5">
+                    <label for="email">Email:</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Введіть email">
+                </div>
+                <div class="form-group col-2">
+                    <label for="rating">Рейтинг:</label>
+                    <input type="number" class="form-control" min="0" max="10" step="0.1" id="rating" name="rating">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="text">Текст:</label>
+                <textarea class="form-control" id="text" name="text" rows="6"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Відправити</button>
+        </form>
+        {% for review in hotel.hotelreview_set.all %}
+        <div class="card mt-4">
+            <div class="card-body">
+            <p class="card-title font-weight-bold">
+                <span class="badge {% if review.rating >= 8 %}badge-success{% elif review.rating < 5 %}badge-danger{% else %}badge-warning{% endif %}">
+                    {{ review.rating }}
+                </span>
+                 &bull; {{ review.author }} &bull; {{ review.created_at }}
+            </p>
+                {{ review.text }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

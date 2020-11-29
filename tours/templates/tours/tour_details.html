@@ -1,0 +1,113 @@
+{% extends '../main/base.html' %}
+{% load custom_tags %}
+
+{% block title %}
+    Тури
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row no-gutters">
+        <img src="{{ tour.image.url }}" class="img-fluid rounded-left col-6">
+        <div class="col-6 rounded-right bg-white p-4">
+            <h3 class="mb-0">{{ tour.hotel }}</h3>
+            <h1>{% for i in tour.stars|times %}<span style="color:orange;">&starf;</span>{% endfor %}</h1>
+            <p class="font-weight-bold">{{ tour.country }}, {{ tour.city }}</p>
+            <p>Рейтинг: {{ tour.get_rate }}/10</p>
+        </div>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        {% regroup tour.facilities.all by category as facility_categories %}
+        <h5>Зручності</h5>
+        <ul class="list-inlin row">
+            {% for category in facility_categories %}
+            <li class="list-inline-item col-3"><span class="font-weight-bold">{{ category.grouper }}</span>
+                <ul>
+                    {% for facility in category.list %}
+                    <li>{{ facility.name }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        {% regroup tour.price_set.all by date as dates %}
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                {% for date in dates %}
+                <a class="nav-link {% if forloop.first %}active{% endif %}" data-toggle="tab" href="#nav-{{ forloop.counter }}" role="tab">{{ date.grouper }}</a>
+                {% endfor %}
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            {% for date in dates %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="nav-{{ forloop.counter }}" role="tabpanel">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Турагенство</th>
+                            <th scope="col">Харчування</th>
+                            <th scope="col">Кількість ночей</th>
+                            <th scope="col">Вартість</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in date.list %}
+                        <tr>
+                            <td>Турагенство: {{ ticket.agency }}</td>
+                            <td>{{ ticket.meals }}</td>
+                            <td>Ночей: {{ ticket.nights }}</td>
+                            <td>{{ ticket.price }} грн</td>
+                            <td>
+                                <a href="{{ ticket.url }}" class="btn btn-primary">Забронювати</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="rounded bg-white mt-4 p-4">
+        <h5 class="d-flex justify-content-between">Відгуки про {{ tour.hotel }}</h5>
+        <form action="{% url 'add_review' tour.id %}" method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-5">
+                    <label for="name">Ім'я:</label>
+                    <input type="text" class="form-control" id="name" name="author" placeholder="Введіть ім'я">
+                </div>
+                <div class="form-group col-5">
+                    <label for="email">Email:</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Введіть email">
+                </div>
+                <div class="form-group col-2">
+                    <label for="rating">Рейтинг:</label>
+                    <input type="number" class="form-control" min="0" max="10" step="0.1" id="rating" name="rating">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="text">Текст:</label>
+                <textarea class="form-control" id="text" name="text" rows="6"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Відправити</button>
+        </form>
+        {% for review in tour.review_set.all %}
+        <div class="card mt-4">
+            <div class="card-body">
+            <p class="card-title font-weight-bold">
+                <span class="badge {% if review.rating >= 8 %}badge-success{% elif review.rating < 5 %}badge-danger{% else %}badge-warning{% endif %}">
+                    {{ review.rating }}
+                </span>
+                 &bull; {{ review.author }} &bull; {{ review.created_at }}
+            </p>
+                {{ review.text }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends '../main/base.html' %}
+
+{% block title %}
+    Авіаквитки
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="mb-3">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-row align-items-center mb-2">
+                    <div class="col-4">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">З</div>
+                            </div>
+                                <input type="text" class="form-control" name="departurePoint" placeholder="Місто відправлення" list="airports" {% if search_param %} value="{{ search_param.departurePoint }}" {% endif %}>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">В</div>
+                            </div>
+                            <input type="text" class="form-control" name="destinationPoint" placeholder="Місто прибуття" list="airports"  {% if search_param %} value="{{ search_param.destinationPoint }}" {% endif %}>
+                        </div>
+                    </div>
+                    <datalist id="airports">
+                        {% for airport in airports %}
+                            <option>{{ airport }}</option>
+                        {% endfor %}
+                    </datalist>
+                    <div class="col-auto">
+                        <input type="date" name="departureTime" class="form-control"  {% if search_param %} value="{{ search_param.departureTime }}" {% endif %}>
+                    </div>
+                    <div class="col-auto">
+                      <button type="submit" class="btn btn-primary">Знайти</button>
+                    </div>
+                </div>
+                <div class="form-group row container">
+                    <div class="col-3">
+                        <div class="font-weight-bold">Компанії:</div>
+                        {% for company in companies %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="{{ company }}" name="companies" value="{{ company }}" {% if company in search_param.companies %} checked {% endif %}>
+                            <label class="form-check-label" for="{{ company }}">{{ company }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-3">
+                        <div class="font-weight-bold">Агенства:</div>
+                        {% for agency in agencies %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="{{ agency }}" name="agencies" value="{{ agency }}" {% if agency in search_param.agencies %} checked {% endif %}>
+                            <label class="form-check-label" for="{{ agency }}">{{ agency }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-2">
+                        <label class="font-weight-bold" for="min">Ціна:</label>
+                        <input class="form-control mb-2" type="number" min="0" id="min" name="min_price" placeholder="Мінімальна" {% if search_param.min_price %} value="{{ search_param.min_price }}" {% else %} value="0" {% endif %}>
+                        <input class="form-control" type="number" min="0" id="max" name="max_price" placeholder="Максимальна" {% if search_param.max_price %} value="{{ search_param.max_price }}" {% else %} value="999999" {% endif %}>
+                    </div>
+                    <div class="col-3">
+                        <label class="font-weight-bold" for="sort">Сортувати за:</label>
+                        <select class="form-control" id="sort" name="sort">
+                          <option value="departureTime" {% if search_param.sort == 'departureTime' %} selected {% endif %}>Датою відравлення</option>
+                          <option value="departurePoint" {% if search_param.sort == 'departurePoint' %} selected {% endif %}>Пунктом відправлення</option>
+                          <option value="destinationPoint" {% if search_param.sort == 'destinationPoint' %} selected {% endif %}>Пунктом призначення</option>
+                          <option value="price" {% if search_param.sort == 'price' %} selected {% endif %}>Ціною</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% for ticket in tickets %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">  {{ ticket.company }}</h5>
+                    <p class="card-text mb-0">{{ ticket.departurePoint }} - {{ ticket.destinationPoint }}</p>
+                    <p class="card-text mb-0">{{ ticket.departureTime }} - {{ ticket.destinationTime }}</p>
+                    <p class="card-text text-muted">Час в дорозі: {{ ticket.get_duration }}</p>
+                    <p class="card-text">{{ ticket.agency }} <span class="font-weight-bold">{{ ticket.price }} грн.</span></p>
+                    <a href="{{ ticket.url }}" class="btn btn-primary">Придбати</a>
+              </div>
+            </div>
+        {% empty %}
+            <p>За вашим запитом нічого не знайдено.</p>
+        {% endfor %}
+    </div>
+
+{% endblock %}

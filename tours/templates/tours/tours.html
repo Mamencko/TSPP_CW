@@ -1,0 +1,103 @@
+{% extends '../main/base.html' %}
+{% load custom_tags %}
+
+{% block title %}
+    Тури
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="mb-3">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-row align-items-center mb-2">
+                <div class="col-4">
+                    <input type="text" class="form-control" name="dest_country" placeholder="Країна" list="countries" {% if search_param.country %} value="{{ search_param.country }}" {% endif %}>
+                </div>
+                <datalist id="countries">
+                    {% for country in countries %}
+                    <option>{{ country }}</option>
+                    {% endfor %}
+                </datalist>
+                <div class="col-auto">
+                    <input type="date" name="date" class="form-control" {% if search_param.date %} value="{{ search_param.date }}" {% endif %}>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Знайти</button>
+                </div>
+            </div>
+            <div class="form-group row container">
+                <div class="col-auto">
+                    <div class="font-weight-bold">Зірки:</div>
+                    {% for star in stars %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="{{ star }}" name="stars" value="{{ star }}" {% if star in search_param.stars %} checked {% endif %}>
+                        <label class="form-check-label" for="{{ star }}">
+                            {% for i in star|times %}<span style="color:orange;">&starf;</span>{% endfor %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-auto">
+                    <div class="font-weight-bold">Харчування:</div>
+                    {% for meal in meals %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="{{ meal }}" name="meals" value="{{ meal }}" {% if meal in search_param.meals %} checked {% endif %}>
+                        <label class="form-check-label" for="{{ meal }}">{{ meal }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-auto">
+                    <div class="font-weight-bold">Агенства:</div>
+                    {% for agency in agencies %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="{{ agency }}" name="agencies" value="{{ agency }}" {% if agency in search_param.agencies %} checked {% endif %}>
+                        <label class="form-check-label" for="{{ agency }}">{{ agency }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-2">
+                    <label class="font-weight-bold" for="min">Ціна:</label>
+                    <input class="form-control mb-2" type="number" min="0" id="min" name="min_price" placeholder="Мінімальна" {% if search_param.min_price %} value="{{ search_param.min_price }}" {% else %} value="0" {% endif %}>
+                    <input class="form-control" type="number" min="0" id="max" name="max_price" placeholder="Максимальна" {% if search_param.max_price %} value="{{ search_param.max_price }}" {% else %} value="999999" {% endif %}>
+                </div>
+                <div class="col-auto">
+                    <label class="font-weight-bold" for="sort">Сортувати за:</label>
+                    <select class="form-control" id="sort" name="sort">
+                        <option value="city" {% if search_param.sort == 'city' %} selected {% endif %}>Містом</option>
+                        <option value="price__price" {% if search_param.sort == 'price__price' %} selected {% endif %}>Ціною</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% for tour in tours %}
+    <div class="card shadow-sm mb-3">
+        <div class="row no-gutters">
+            <div class="col-4">
+                <img src="{{ tour.image.url }}" class="card-img">
+            </div>
+            <div class="col-8">
+                <div class="card-body">
+                    <h5 class="card-title mb-1">
+                        {{ tour.hotel }}
+                        {% for i in tour.stars|times %}
+                        <span style="color:orange;">&starf;</span>
+                        {% endfor %}
+                    </h5>
+                    <p class="card-subtitle text-muted">
+                        {{ tour.country }}, {{ tour.city }}
+                    </p>
+                    <p class="card-text mb-0">Рейтинг: {{ tour.get_rate }}/10 <span class="text-muted">(Відгуків: {{ tour.review_set.count }})</span></p>
+                    <p class="card-text">{{ tour.get_lowest_price.meals }}</p>
+                    <p class="card-text font-weight-bold">{{ tour.get_lowest_price.price }} грн</p>
+                    <a href="{% url 'tour_detail' tour.id %}" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>За вашим запитом нічого не знайдено.</p>
+    {% endfor %}
+</div>
+{% endblock %}
